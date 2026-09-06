@@ -1,6 +1,8 @@
 # Advanced MLOps Exercise - Completion Report
 
 **Application:** `student-ml-api`  
+**MLOps Section:** A
+
 **Repository:** <https://github.com/UmerN236/student-ml-api>  
 **Registry:** `ghcr.io/umern236/student-ml-api`  
 **Completed:** 6 September 2026
