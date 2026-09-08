@@ -7,9 +7,11 @@
 **Registry:** `ghcr.io/umern236/student-ml-api`  
 **Completed:** 6 September 2026
 
-## 1. Outcome and requirement map
+## 1. Project overview
 
-The repository implements a Flask prediction API, eight automated tests, pull-request CI, a production-oriented Docker image, protected-branch development, semantic Git releases, automated GHCR publication, artifact recovery, rollback, OCI metadata, commit tags, cache analysis, and failure diagnosis.
+For this assignment, I built a small Flask prediction API and set up the workflow around it as I would for a real team project. I developed the two application versions on separate feature branches, opened pull requests, ran automated checks, and merged only after CI passed. I then used Git tags to publish versioned Docker images to GitHub Container Registry (GHCR).
+
+The table below gives a quick summary of the completed work and where the evidence can be found.
 
 | Requirement | Implemented evidence |
 |---|---|
@@ -24,9 +26,11 @@ The repository implements a Flask prediction API, eight automated tests, pull-re
 | Traceability | PR #2 -> merge `f6f1711...` -> tag `v1.1.0` -> image `1.1.0` -> digest `sha256:892843...` |
 | Reproducibility and rollback | v1.0.0 deleted locally, pulled from GHCR, run, upgraded to v1.1.0, then rolled back without a rebuild |
 
-## 2. Application and tests
+## 2. Application and automated tests
 
-The `/predict` endpoint doubles a finite numeric input. It rejects missing JSON/fields, strings, nulls, booleans, and non-finite numbers with HTTP 400. The current `/health` response is:
+The application has two endpoints. `GET /health` reports whether the service is running and shows the application and model versions. `POST /predict` accepts a number and returns twice that value. I also added validation so that missing values, text, null values, Boolean values, and non-finite numbers return HTTP 400 instead of causing an application error.
+
+The current `/health` response is:
 
 ```json
 {
@@ -37,7 +41,7 @@ The `/predict` endpoint doubles a finite numeric input. It rejects missing JSON/
 }
 ```
 
-The eight pytest cases cover:
+I wrote eight pytest cases covering:
 
 1. health status and metadata;
 2. integer prediction;
@@ -48,7 +52,7 @@ The eight pytest cases cover:
 7. invalid Boolean input; and
 8. non-JSON input.
 
-Final local result:
+The final local test result was:
 
 ```text
 ........                                                                 [100%]
@@ -82,11 +86,11 @@ pytest -v
 - Merge commit: `f6f1711c8a080c2ff18053f3cf9d98c7e5e8c2c5`
 - Result: merged only after eight tests and the Docker build-check passed.
 
-Both PR descriptions include Summary, Changes, Testing Performed, Docker Impact, and a completed readiness checklist. A review record was added to each PR.
+Both pull requests contain a clear summary, list of changes, testing details, Docker impact, and a completed checklist. I also added a review note before each merge.
 
 ### Merge strategy
 
-Both feature PRs used **Squash and merge**. This keeps `main` release-focused and easy to revert while each PR retains the detailed feature/test/failure history and discussion. The PR number is included in each squash commit subject, preserving navigation from `main` back to the review record.
+I used **Squash and merge** for both feature pull requests. This keeps the history on `main` short and easy to read, while the full list of development commits is still available inside each pull request. The pull request number is included in the merge commit, so it is easy to move from the main history back to the original review.
 
 ## 4. Branch protection
 
@@ -99,13 +103,13 @@ The GitHub branch-protection rule for `main` has these settings:
 - administrators are included, preventing an owner from bypassing the rule;
 - force pushes and branch deletion are disabled.
 
-The repository has one owner account, so the approving-review count is zero; GitHub does not permit a PR author to approve their own PR. Review records on both PRs document the manual review performed. In a team repository this should be raised to at least one approval, ideally with CODEOWNERS.
+This repository currently has one owner, so the required approval count is zero because GitHub does not allow an author to approve their own pull request. I recorded the review checks as comments on both pull requests. In a team repository, I would require at least one approval and use a CODEOWNERS file where appropriate.
 
 ## 5. CI workflow
 
-`ci.yml` runs on pull requests targeting `main` and on feature-branch pushes. Its single required job performs checkout, Python 3.12 setup, pinned dependency installation, pytest, and a Docker build. It has read-only repository permissions, uses concurrency cancellation, and never authenticates to or pushes into a registry.
+The `ci.yml` workflow runs for pull requests targeting `main` and for pushes to feature branches. It checks out the code, installs Python 3.12 and the project dependencies, runs pytest, and builds the Docker image as a validation step. The workflow has read-only repository permissions and does not log in to GHCR or publish an image.
 
-The CI/release split is a security and lifecycle boundary. A PR is untrusted, mutable candidate source. Publishing every PR would create noisy, unreviewed images, consume registry storage, risk tag races, and unnecessarily expose write credentials. Releases are produced only from approved source identified by an immutable semantic tag.
+I kept CI and release publishing separate because a pull request is still work under review. Publishing an image for every PR would fill the registry with temporary images and could publish code that has not been approved. In this project, publishing happens only after the code is merged and a semantic version tag is pushed.
 
 ### Mandatory deliberate failure
 
@@ -118,7 +122,9 @@ PR #2 independently passed [CI run 34041923608](https://github.com/UmerN236/stud
 
 ## 6. Docker implementation and inspection
 
-The Dockerfile uses the explicit base `python:3.12.11-slim`, `/app` as `WORKDIR`, pinned dependencies, `pip --no-cache-dir`, cache-aware COPY ordering, port 5000, Gunicorn bound to `0.0.0.0`, and a non-root UID 10001. `.dockerignore` excludes Git metadata, workflows, bytecode, caches, virtual environments, secrets, temporary evidence, documentation, and Markdown files.
+The Dockerfile uses the fixed base image `python:3.12.11-slim` instead of `latest`. The working directory is `/app`, dependencies are pinned, and pip uses `--no-cache-dir`. The requirements file is copied before the application code so that Docker can reuse the dependency layer when only the source code changes. Gunicorn listens on `0.0.0.0:5000`, and the application runs as the non-root user with UID 10001.
+
+The `.dockerignore` file removes Git data, workflow files, Python cache files, virtual environments, environment files, temporary files, and documentation from the Docker build context.
 
 Local inspection of the running v1.0.0 rollback container produced:
 
@@ -149,16 +155,16 @@ Inside the container, `pwd` returned `/app`, UID was `10001`, and files were `VE
 
 ## 7. Automated semantic releases and registry verification
 
-`release.yml` runs only for tags matching `v*.*.*`. It removes the leading `v` at runtime, validates semantic-version syntax, and fails if the derived value differs from `VERSION`. Nothing in the workflow hard-codes `1.0.0` or `1.1.0`.
+The `release.yml` workflow runs only when a tag matching `v*.*.*` is pushed. It removes the leading `v`, checks that the remaining value follows semantic versioning, and compares it with the `VERSION` file. The release number is therefore derived automatically rather than being hard-coded in the workflow.
 
-The workflow tests before publishing, authenticates to GHCR with the ephemeral `GITHUB_TOKEN`, and publishes semantic, `latest`, and seven-character commit-SHA tags. No registry password exists in YAML or repository history.
+Before publishing, the workflow runs the tests again. It then signs in to GHCR using GitHub's temporary `GITHUB_TOKEN` and publishes the semantic version tag, `latest`, and a seven-character commit tag. No registry password is stored in the YAML file or Git history.
 
 | Source | Image tags | Registry index digest |
 |---|---|---|
 | PR #1 merge `6429225...`, Git tag `v1.0.0` | `1.0.0`, `6429225` | `sha256:2d4522c756d483b242fdf3bfe3b0ca111f2dab2a5612d09771c072985af10c21` |
 | PR #2 merge `f6f1711...`, Git tag `v1.1.0` | `1.1.0`, `f6f1711`, `latest` | `sha256:892843cbd96ca07a9274cb3d6c983c5d854f9d3a0b25f7bc2336f85488771a56` |
 
-The matching digest proves `latest` currently points to the same artifact as `1.1.0`. Version `1.0.0` remains independently retrievable. A commit tag is useful during incident response because it maps a running artifact directly to one source snapshot even when semantic or floating tags are unavailable or move.
+The matching digest confirms that `latest` and `1.1.0` currently refer to the same image. Version `1.0.0` still has its own digest and can be downloaded separately. The commit-based tag provides a direct link to the exact source revision, which is useful when investigating a deployment problem.
 
 ## 8. OCI image metadata
 
@@ -171,7 +177,7 @@ org.opencontainers.image.source=https://github.com/UmerN236/student-ml-api
 org.opencontainers.image.created=2026-09-06T20:17:17+05:00
 ```
 
-This metadata connects the binary artifact to its version, exact Git commit, repository, and build time.
+These labels make it possible to identify the application version, exact Git commit, source repository, and build time directly from the image.
 
 ## 9. Artifact reproducibility and rollback
 
@@ -186,13 +192,13 @@ docker run -d --platform linux/amd64 --name student-ml-api \
   -p 5050:5000 ghcr.io/umern236/student-ml-api:1.0.0
 ```
 
-The registry returned digest `sha256:2d4522...`; no `docker build` occurred. The downloaded image returned:
+The registry returned digest `sha256:2d4522...`. I did not rebuild the image. After starting the downloaded image, the health endpoint returned:
 
 ```json
 {"application":"student-ml-api","status":"healthy","version":"1.0.0"}
 ```
 
-The GitHub runner produced a linux/amd64 image. On the arm64 demonstration machine, the first start correctly diagnosed `exec format error`; installing the standard binfmt amd64 emulator allowed the exact same pulled bytes to run, still without rebuilding.
+GitHub's runner produced a linux/amd64 image, while my demonstration machine uses arm64. The first start therefore produced an `exec format error`. After enabling standard amd64 emulation with binfmt, the same downloaded image ran successfully without being rebuilt.
 
 ### Upgrade and rollback
 
@@ -202,9 +208,9 @@ The pulled v1.1.0 artifact returned:
 {"application":"student-ml-api","application_version":"1.1.0","model_version":"model-1","status":"healthy"}
 ```
 
-Rollback removed that container and started the already-pulled immutable `1.0.0` registry tag. Its old health contract immediately returned again. No source change, clone, dependency resolution, or image build occurred.
+To test rollback, I stopped version 1.1.0 and started the already downloaded 1.0.0 image. The original health response returned immediately. I did not change the source code, reinstall dependencies, or rebuild the image.
 
-This is safer than `git clone; pip install; python app.py` because the image freezes the application, interpreter, dependencies, runtime command, filesystem, and metadata as one verified artifact. A source-based rollback can resolve newer dependencies, use a different interpreter or OS, omit configuration, and take longer during an incident.
+This approach is more reliable than running `git clone`, `pip install`, and `python app.py` during an incident. The container image already contains the tested code, Python runtime, dependencies, command, and filesystem. Recreating the service from source could install different dependencies or use a different runtime environment.
 
 ## 10. Complete v1.1.0 traceability chain
 
@@ -223,7 +229,7 @@ Both `1.1.0`, `f6f1711`, and `latest` resolved to this digest at verification ti
 
 ## 11. Docker layer-cache experiment
 
-Three builds used identical build arguments to isolate file changes:
+I ran three builds with the same build arguments so that only the file changes affected the cache:
 
 1. Baseline built the current source.
 2. After changing only `app.py`, `WORKDIR`, `COPY requirements.txt`, and `RUN pip install` were `CACHED`; only the application COPY and following user/ownership layer reran.
@@ -237,7 +243,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py VERSION ./
 ```
 
-Application files change much more often than dependencies. Separating the stable dependency manifest preserves the expensive installation layer for ordinary code edits. `COPY . .` before installation invalidates that layer for nearly every source or documentation edit.
+Application files normally change more often than dependency files. By copying `requirements.txt` first, Docker can reuse the slower dependency-installation layer for normal source-code changes. If `COPY . .` came first, almost any file change would cause pip to run again.
 
 ## 12. Failure analysis
 
@@ -303,6 +309,6 @@ Use an unused host port such as `5050:5000` if port 5000 is already reserved. On
 14. **Git tag versus image tag?** The Git tag identifies the approved source commit; automation derives the corresponding image tag from it. The digest identifies the produced bytes.
 15. **Independent app/model versions in MLOps?** Compatibility, feature schema, preprocessing, data lineage, monitoring baselines, staged rollout, and rollback must track both dimensions. One can change or regress without the other.
 
-## 15. Core principle
+## 15. Conclusion
 
-Git records how source evolves. Pull requests govern entry to the protected branch. CI verifies candidate changes. Docker packages approved code and runtime dependencies as an artifact. GHCR stores immutable, versioned artifacts that can be traced, deployed consistently, and rolled back without rebuilding.
+This assignment showed how the different parts of an MLOps workflow fit together. Git records changes to the source code, pull requests control how those changes reach `main`, and CI checks the application before merge. Docker packages the approved code into a repeatable artifact, while GHCR stores versioned images that can be traced to a commit and used again for deployment or rollback.
