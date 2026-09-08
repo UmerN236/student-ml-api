@@ -3,12 +3,13 @@
 [![Pull Request CI](https://github.com/UmerN236/student-ml-api/actions/workflows/ci.yml/badge.svg)](https://github.com/UmerN236/student-ml-api/actions/workflows/ci.yml)
 [![Release Container Image](https://github.com/UmerN236/student-ml-api/actions/workflows/release.yml/badge.svg)](https://github.com/UmerN236/student-ml-api/actions/workflows/release.yml)
 
-A small Flask prediction service demonstrating a production-style MLOps path from pull request to an immutable, traceable container image.
+A small FastAPI prediction service demonstrating a production-style MLOps path from pull request to an immutable, traceable container image.
 
 ## API
 
 - `GET /health` reports application and model versions.
 - `POST /predict` accepts `{"value": 10}` and returns `{"input": 10, "prediction": 20}`.
+- `GET /docs` provides FastAPI's interactive OpenAPI documentation.
 
 ## Local development
 
