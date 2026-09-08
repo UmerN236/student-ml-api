@@ -12,30 +12,30 @@
 
 **Registry:** `ghcr.io/umern236/student-ml-api`
 
-**Completed:** 6 September 2026
+**Completed:** 8 September 2026
 
 ## 1. Project overview
 
-For this assignment, I built a small Flask prediction API and set up the workflow around it as I would for a real team project. I developed the two application versions on separate feature branches, opened pull requests, ran automated checks, and merged only after CI passed. I then used Git tags to publish versioned Docker images to GitHub Container Registry (GHCR).
+For this assignment, I built a small FastAPI prediction service and set up a complete workflow around it. I developed two application versions on separate feature branches, opened pull requests, ran automated checks, and merged only after CI passed. I then used Git tags to publish versioned Docker images to GitHub Container Registry (GHCR).
 
 The table below gives a quick summary of the completed work and where the evidence can be found.
 
 | Requirement | Implemented evidence |
 |---|---|
 | Application and at least four tests | `app.py`; eight passing tests in `tests/test_app.py` |
-| Feature-branch development | `feature/prediction-api` and `feature/model-metadata` |
-| Two professional PRs | [PR #1](https://github.com/UmerN236/student-ml-api/pull/1), [PR #2](https://github.com/UmerN236/student-ml-api/pull/2) |
-| Failed and successful CI | [deliberate failure](https://github.com/UmerN236/student-ml-api/actions/runs/34041765056), [corrected success](https://github.com/UmerN236/student-ml-api/actions/runs/34041789935) |
+| Feature-branch development | `feature/fastapi-prediction-api` and `feature/fastapi-model-metadata` |
+| Two professional PRs | [PR #7](https://github.com/UmerN236/student-ml-api/pull/7), [PR #8](https://github.com/UmerN236/student-ml-api/pull/8) |
+| Failed and successful CI | [deliberate failure](https://github.com/UmerN236/student-ml-api/actions/runs/34238994110), [corrected success](https://github.com/UmerN236/student-ml-api/actions/runs/34239112323) |
 | CI test and build-check only | `.github/workflows/ci.yml` |
 | Tag-only release publishing | `.github/workflows/release.yml` |
-| Successful releases | [v1.0.0 run](https://github.com/UmerN236/student-ml-api/actions/runs/34041836595), [v1.1.0 run](https://github.com/UmerN236/student-ml-api/actions/runs/34041965272) |
-| Registry tags | `1.0.0`, `1.1.0`, `latest`, `6429225`, and `f6f1711` |
-| Traceability | PR #2 -> merge `f6f1711...` -> tag `v1.1.0` -> image `1.1.0` -> digest `sha256:892843...` |
+| Successful releases | [v1.0.0 run](https://github.com/UmerN236/student-ml-api/actions/runs/34239296952), [v1.1.0 run](https://github.com/UmerN236/student-ml-api/actions/runs/34239580372) |
+| Registry tags | `1.0.0`, `1.1.0`, `latest`, `cb0ba8b`, and `db97c0c` |
+| Traceability | PR #8 -> merge `db97c0c...` -> tag `v1.1.0` -> image `1.1.0` -> digest `sha256:4f3227...` |
 | Reproducibility and rollback | v1.0.0 deleted locally, pulled from GHCR, run, upgraded to v1.1.0, then rolled back without a rebuild |
 
 ## 2. Application and automated tests
 
-The application has two endpoints. `GET /health` reports whether the service is running and shows the application and model versions. `POST /predict` accepts a number and returns twice that value. I also added validation so that missing values, text, null values, Boolean values, and non-finite numbers return HTTP 400 instead of causing an application error.
+The application uses FastAPI and has two main endpoints. `GET /health` reports whether the service is running and shows the application and model versions. `POST /predict` accepts a number and returns twice that value. Pydantic validates requests, so missing values, text, null values, Boolean values, and non-finite numbers return HTTP 422 instead of causing an application error. FastAPI also provides interactive documentation at `/docs`.
 
 The current `/health` response is:
 
@@ -63,7 +63,7 @@ The final local test result was:
 
 ```text
 ........                                                                 [100%]
-8 passed in 0.07s
+8 passed in 0.16s
 ```
 
 Run locally with:
@@ -77,20 +77,20 @@ pytest -v
 
 ## 3. Git and pull-request workflow
 
-### PR #1 - prediction API and v1.0.0
+### PR #7 - FastAPI prediction API and v1.0.0
 
-- URL: <https://github.com/UmerN236/student-ml-api/pull/1>
-- Branch: `feature/prediction-api` -> `main`
-- Meaningful commits include `feat: add prediction API and container image`, `test: add API tests and automation workflows`, and `fix: correct health endpoint test`.
-- Merge commit: `6429225e39af874c0fc10c0d02593ce92e384271`
+- URL: <https://github.com/UmerN236/student-ml-api/pull/7>
+- Branch: `feature/fastapi-prediction-api` -> `main`
+- Meaningful commits include `feat: migrate prediction API to FastAPI`, `test: update API tests for FastAPI validation`, and `fix: correct FastAPI health endpoint test`.
+- Merge commit: `cb0ba8b27fe2bd1d04ff57c988e02182ef557e4e`
 - Result: merged only after the required CI check passed.
 
-### PR #2 - model metadata and v1.1.0
+### PR #8 - FastAPI model metadata and v1.1.0
 
-- URL: <https://github.com/UmerN236/student-ml-api/pull/2>
-- Branch: `feature/model-metadata` -> `main`
-- Commits: `feat: add model metadata to health endpoint` and `test: update health checks for model metadata`.
-- Merge commit: `f6f1711c8a080c2ff18053f3cf9d98c7e5e8c2c5`
+- URL: <https://github.com/UmerN236/student-ml-api/pull/8>
+- Branch: `feature/fastapi-model-metadata` -> `main`
+- Commits: `feat: add FastAPI model metadata` and `test: verify FastAPI model metadata`.
+- Merge commit: `db97c0c1c5e348e2dee71519a9ebee1609b7e504`
 - Result: merged only after eight tests and the Docker build-check passed.
 
 Both pull requests contain a clear summary, list of changes, testing details, Docker impact, and a completed checklist. I also added a review note before each merge.
@@ -120,33 +120,33 @@ I kept CI and release publishing separate because a pull request is still work u
 
 ### Mandatory deliberate failure
 
-1. Commit `3d2bc26` intentionally changed the expected health status from `healthy` to `wrong`.
-2. [CI run 34041765056](https://github.com/UmerN236/student-ml-api/actions/runs/34041765056) failed in `Run unit tests`; Docker validation was correctly skipped.
-3. Commit `31213d3` used the required message `fix: correct health endpoint test` and restored the assertion.
-4. [CI run 34041789935](https://github.com/UmerN236/student-ml-api/actions/runs/34041789935) then passed pytest and Docker build validation.
+1. Commit `e8097ce` intentionally changed the expected health status from `healthy` to `wrong`.
+2. [CI run 34238994110](https://github.com/UmerN236/student-ml-api/actions/runs/34238994110) failed in `Run unit tests`; Docker validation was correctly skipped.
+3. Commit `a4138f7` used the message `fix: correct FastAPI health endpoint test` and restored the assertion.
+4. [CI run 34239112323](https://github.com/UmerN236/student-ml-api/actions/runs/34239112323) then passed pytest and Docker build validation.
 
-PR #2 independently passed [CI run 34041923608](https://github.com/UmerN236/student-ml-api/actions/runs/34041923608).
+PR #8 independently passed [CI run 34239430241](https://github.com/UmerN236/student-ml-api/actions/runs/34239430241).
 
 ## 6. Docker implementation and inspection
 
-The Dockerfile uses the fixed base image `python:3.12.11-slim` instead of `latest`. The working directory is `/app`, dependencies are pinned, and pip uses `--no-cache-dir`. The requirements file is copied before the application code so that Docker can reuse the dependency layer when only the source code changes. Gunicorn listens on `0.0.0.0:5000`, and the application runs as the non-root user with UID 10001.
+The Dockerfile uses the fixed base image `python:3.12.11-slim` instead of `latest`. The working directory is `/app`, dependencies are pinned, and pip uses `--no-cache-dir`. The requirements file is copied before the application code so that Docker can reuse the dependency layer when only the source code changes. Uvicorn runs the FastAPI application on `0.0.0.0:5000`, and the application runs as the non-root user `appuser` with UID 10001.
 
 The `.dockerignore` file removes Git data, workflow files, Python cache files, virtual environments, environment files, temporary files, and documentation from the Docker build context.
 
 Local inspection of the running v1.0.0 rollback container produced:
 
 ```text
-CONTAINER=51b46608f0bd
+CONTAINER=3c35c2def027
 IMAGE=ghcr.io/umern236/student-ml-api:1.0.0
-IMAGE_ID=2d4522c756d4
-PORTS=0.0.0.0:5051->5000/tcp
-COMMAND="gunicorn --bind 0.0.0.0:5000 --workers 2 --access-logfile - app:app"
+IMAGE_ID=sha256:05bbbbad85d7705a1c7036f0cb4b02b13136321d32b79a09698504647bf33f7e
+PORTS=0.0.0.0:5050->5000/tcp
+COMMAND="uvicorn app:app --host 0.0.0.0 --port 5000 --workers 2"
 WORKDIR=/app
-USER=10001
+USER=appuser
 EXPOSED={"5000/tcp":{}}
 ```
 
-Port 5051 was used on this Mac because host port 5000 is occupied by macOS AirPlay (`Server: AirTunes`). The container still exposes and listens on the assignment-required port 5000. On a host where port 5000 is free, use `-p 5000:5000` exactly as specified.
+Port 5050 was used on this Mac because host port 5000 is occupied by macOS AirPlay. The container still exposes and listens on the assignment-required port 5000. On a host where port 5000 is free, use `-p 5000:5000` exactly as specified.
 
 Equivalent inspection commands are:
 
@@ -168,8 +168,8 @@ Before publishing, the workflow runs the tests again. It then signs in to GHCR u
 
 | Source | Image tags | Registry index digest |
 |---|---|---|
-| PR #1 merge `6429225...`, Git tag `v1.0.0` | `1.0.0`, `6429225` | `sha256:2d4522c756d483b242fdf3bfe3b0ca111f2dab2a5612d09771c072985af10c21` |
-| PR #2 merge `f6f1711...`, Git tag `v1.1.0` | `1.1.0`, `f6f1711`, `latest` | `sha256:892843cbd96ca07a9274cb3d6c983c5d854f9d3a0b25f7bc2336f85488771a56` |
+| PR #7 merge `cb0ba8b...`, Git tag `v1.0.0` | `1.0.0`, `cb0ba8b` | `sha256:05bbbbad85d7705a1c7036f0cb4b02b13136321d32b79a09698504647bf33f7e` |
+| PR #8 merge `db97c0c...`, Git tag `v1.1.0` | `1.1.0`, `db97c0c`, `latest` | `sha256:4f322748713dccf40aa0907dd75b8fa78a0018acadac22a2c4d7f51a3e45c230` |
 
 The matching digest confirms that `latest` and `1.1.0` currently refer to the same image. Version `1.0.0` still has its own digest and can be downloaded separately. The commit-based tag provides a direct link to the exact source revision, which is useful when investigating a deployment problem.
 
@@ -179,9 +179,9 @@ The Dockerfile and release workflow apply standard OCI labels. Inspection of the
 
 ```text
 org.opencontainers.image.version=1.0.0
-org.opencontainers.image.revision=6429225e39af874c0fc10c0d02593ce92e384271
+org.opencontainers.image.revision=cb0ba8b27fe2bd1d04ff57c988e02182ef557e4e
 org.opencontainers.image.source=https://github.com/UmerN236/student-ml-api
-org.opencontainers.image.created=2026-09-06T20:17:17+05:00
+org.opencontainers.image.created=2026-09-08T19:35:34+05:00
 ```
 
 These labels make it possible to identify the application version, exact Git commit, source repository, and build time directly from the image.
@@ -199,7 +199,7 @@ docker run -d --platform linux/amd64 --name student-ml-api \
   -p 5050:5000 ghcr.io/umern236/student-ml-api:1.0.0
 ```
 
-The registry returned digest `sha256:2d4522...`. I did not rebuild the image. After starting the downloaded image, the health endpoint returned:
+The registry returned digest `sha256:05bbbb...`. I did not rebuild the image. After starting the downloaded image, the health endpoint returned:
 
 ```json
 {"application":"student-ml-api","status":"healthy","version":"1.0.0"}
@@ -222,17 +222,17 @@ This approach is more reliable than running `git clone`, `pip install`, and `pyt
 ## 10. Complete v1.1.0 traceability chain
 
 ```text
-Pull Request:       #2
-PR URL:             https://github.com/UmerN236/student-ml-api/pull/2
-Merge Commit:       f6f1711c8a080c2ff18053f3cf9d98c7e5e8c2c5
+Pull Request:       #8
+PR URL:             https://github.com/UmerN236/student-ml-api/pull/8
+Merge Commit:       db97c0c1c5e348e2dee71519a9ebee1609b7e504
 Git Tag:            v1.1.0
 Docker Image:       ghcr.io/umern236/student-ml-api:1.1.0
-Commit Image Tag:   ghcr.io/umern236/student-ml-api:f6f1711
-Image Digest:       sha256:892843cbd96ca07a9274cb3d6c983c5d854f9d3a0b25f7bc2336f85488771a56
-Release Run:        https://github.com/UmerN236/student-ml-api/actions/runs/34041965272
+Commit Image Tag:   ghcr.io/umern236/student-ml-api:db97c0c
+Image Digest:       sha256:4f322748713dccf40aa0907dd75b8fa78a0018acadac22a2c4d7f51a3e45c230
+Release Run:        https://github.com/UmerN236/student-ml-api/actions/runs/34239580372
 ```
 
-Both `1.1.0`, `f6f1711`, and `latest` resolved to this digest at verification time.
+The tags `1.1.0`, `db97c0c`, and `latest` resolved to this digest at verification time.
 
 ## 11. Docker layer-cache experiment
 
@@ -256,21 +256,21 @@ Application files normally change more often than dependency files. By copying `
 
 ### Failure A - failed pytest (mandatory CI demonstration)
 
-- **Symptom:** CI run 34041765056 failed; Docker validation did not run.
-- **Root cause:** commit `3d2bc26` deliberately expected `status == "wrong"` while the API correctly returned `healthy`.
-- **Evidence:** the failed run is linked in Section 5 and remains visible in PR #1 history.
-- **Correction:** commit `31213d3` restored `healthy`; run 34041789935 passed.
+- **Symptom:** CI run 34238994110 failed; Docker validation did not run.
+- **Root cause:** commit `e8097ce` deliberately expected `status == "wrong"` while the API correctly returned `healthy`.
+- **Evidence:** the failed run is linked in Section 5 and remains visible in PR #7 history.
+- **Correction:** commit `a4138f7` restored `healthy`; run 34239112323 passed.
 
 ### Failure B - wrong container port
 
-- **Symptom:** `curl http://127.0.0.1:5051/health` returned an empty reply.
-- **Root cause:** the deliberately faulty command used `-p 5051:5001`, but Gunicorn listens on container port 5000.
-- **Evidence:** `docker port student-ml-api` showed `5001/tcp -> 0.0.0.0:5051`, while logs showed `Listening at: http://0.0.0.0:5000`.
-- **Correction:** recreate with `-p 5051:5000`; `/health` returned HTTP 200 and the v1.0.0 payload.
+- **Symptom:** `curl http://127.0.0.1:5050/health` returned an empty reply.
+- **Root cause:** the deliberately faulty command used `-p 5050:5001`, but Uvicorn listens on container port 5000.
+- **Evidence:** `docker port student-ml-api` showed `5001/tcp -> 0.0.0.0:5050`, while logs showed Uvicorn running on `http://0.0.0.0:5000`.
+- **Correction:** recreate with `-p 5050:5000`; `/health` returned HTTP 200 and the v1.0.0 payload.
 
 ### Additional environment diagnosis - missing dependency
 
-- **Symptom:** the first clean-host pytest collection raised `ModuleNotFoundError: No module named 'flask'`.
+- **Symptom:** the first clean-host pytest collection raised `ModuleNotFoundError` because the FastAPI dependencies were not installed.
 - **Root cause:** pinned project dependencies had not yet been installed on the host.
 - **Correction:** create `.venv`, run `pip install -r requirements.txt`, then run pytest; all eight tests passed.
 
@@ -280,8 +280,8 @@ Application files normally change more often than dependency files. By copying `
 git clone https://github.com/UmerN236/student-ml-api.git
 cd student-ml-api
 git log --graph --decorate --oneline --all
-gh pr view 1 --web
-gh pr view 2 --web
+gh pr view 7 --web
+gh pr view 8 --web
 gh run list
 
 docker pull ghcr.io/umern236/student-ml-api:1.1.0
@@ -318,4 +318,4 @@ Use an unused host port such as `5050:5000` if port 5000 is already reserved. On
 
 ## 15. Conclusion
 
-This assignment showed how the different parts of an MLOps workflow fit together. Git records changes to the source code, pull requests control how those changes reach `main`, and CI checks the application before merge. Docker packages the approved code into a repeatable artifact, while GHCR stores versioned images that can be traced to a commit and used again for deployment or rollback.
+This assignment showed how the different parts of an MLOps workflow fit together. FastAPI and Pydantic provide the API and validation, Git records source changes, pull requests control how those changes reach `main`, and CI checks the application before merge. Docker packages the approved code into a repeatable artifact, while GHCR stores versioned images that can be traced to a commit and used again for deployment or rollback.
