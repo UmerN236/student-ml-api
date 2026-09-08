@@ -1,10 +1,17 @@
 # Advanced MLOps Exercise - Completion Report
 
-**Application:** `student-ml-api`  
+**Student Name:** Muhammad Umer Naseer
+
+**Roll Number:** 23i-0663
+
 **MLOps Section:** A
 
-**Repository:** <https://github.com/UmerN236/student-ml-api>  
-**Registry:** `ghcr.io/umern236/student-ml-api`  
+**Application:** `student-ml-api`
+
+**Repository:** <https://github.com/UmerN236/student-ml-api>
+
+**Registry:** `ghcr.io/umern236/student-ml-api`
+
 **Completed:** 6 September 2026
 
 ## 1. Project overview
