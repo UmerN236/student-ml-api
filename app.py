@@ -1,11 +1,11 @@
 import math
 from pathlib import Path
 
-from flask import Flask, jsonify, request
+from fastapi import FastAPI
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 APPLICATION_NAME = "student-ml-api"
-MODEL_VERSION = "model-1"
 VERSION_FILE = Path(__file__).with_name("VERSION")
 
 
@@ -14,31 +14,33 @@ def get_version() -> str:
     return VERSION_FILE.read_text(encoding="utf-8").strip()
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
+class PredictionRequest(BaseModel):
+    model_config = ConfigDict(strict=True)
 
-    @app.get("/health")
-    def health():
-        return jsonify(
-            status="healthy",
-            application=APPLICATION_NAME,
-            application_version=get_version(),
-            model_version=MODEL_VERSION,
-        )
+    value: int | float
 
-    @app.post("/predict")
-    def predict():
-        payload = request.get_json(silent=True)
-        if not isinstance(payload, dict) or "value" not in payload:
-            return jsonify(error="Missing required field: value"), 400
-
-        value = payload["value"]
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            return jsonify(error="Field 'value' must be a number"), 400
+    @field_validator("value")
+    @classmethod
+    def value_must_be_finite(cls, value: int | float) -> int | float:
         if not math.isfinite(value):
-            return jsonify(error="Field 'value' must be finite"), 400
+            raise ValueError("value must be finite")
+        return value
 
-        return jsonify(input=value, prediction=value * 2)
+
+def create_app() -> FastAPI:
+    app = FastAPI(title=APPLICATION_NAME, version=get_version())
+
+    @app.get("/health", tags=["service"])
+    def health():
+        return {
+            "status": "healthy",
+            "application": APPLICATION_NAME,
+            "version": get_version(),
+        }
+
+    @app.post("/predict", tags=["prediction"])
+    def predict(payload: PredictionRequest):
+        return {"input": payload.value, "prediction": payload.value * 2}
 
     return app
 
@@ -47,4 +49,6 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    import uvicorn
+
+    uvicorn.run("app:app", host="0.0.0.0", port=5000)
